@@ -1,0 +1,31 @@
+                                               Google Drive Clone
+
+key features => 1. Authentication
+                2. File/Folder Management => a. Create
+                                             b. Rename
+                                             c. Delete
+                                             d. Copy/Cut file to another folder
+                3. Upload files/folder i.e Audio, Image, Document
+                4. File sharing
+                5. Search Functionality
+                6. Trash and Recycle Bin
+
+-------------------------------------------------- SCHEMA ------------------------------------------------
+
+users => {
+    _id: Unique Id of user,
+    email: Email of the user,
+    password: password of the user,
+    data: files/folders of this user,
+}
+
+
+Files/Folders => {
+    _id: Unique Id of the file/folder,
+    name: Name of the files,
+    path: path os the files,
+    parent: parent folder of the file/folder,
+    owner: Id of the owner,
+    sharedWith:Id of all the users this file is shared with
+    time: exact time at which file is uploaded or shared.
+}

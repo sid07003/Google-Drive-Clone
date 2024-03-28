@@ -1,0 +1,148 @@
+#Content {
+    background-color: white;
+    height: calc(100% - 70px);
+    width: calc(100vw - 260px);
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    border-radius: 20px;
+}
+
+#heading {
+    height: 70px;
+    width: 100%;
+    color: black;
+    display: flex;
+    align-items: center;
+    font-size: 25px;
+}
+
+#important_elements {
+    height: 50px;
+    width: 100%;
+    display: flex;
+}
+
+#dropdown {
+    height: 35px;
+    width: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid black;
+    border-radius: 10px;
+    margin-left: 15px;
+    cursor: pointer;
+}
+
+#dropdown:hover {
+    background-color: #f0f0f0;
+}
+
+#dropdown_type {
+    font-size: 15px;
+    font-weight: 500;
+}
+
+#dropdown_icon {
+    margin-left: 10px;
+}
+
+#content_heading {
+    height: 30px;
+    width: 95%;
+    display: flex;
+    border-bottom: 1px solid black;
+    margin-left: 15px;
+}
+
+#content_name {
+    height: 100%;
+    width: 40%;
+    display: flex;
+    align-items: center;
+    padding-left: 15px;
+    font-weight: 500;
+}
+
+#content_owner {
+    height: 100%;
+    width: 20%;
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+}
+
+#empty {
+    height: 80px;
+    width: 95%;
+    margin-left: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: gray;
+    font-weight: 500;
+}
+
+#cover {
+    height: 100%;
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.1);
+    z-index: 0;
+    position: absolute;
+    top: 0;
+}
+
+#create_area {
+    height: 200px;
+    width: 350px;
+    background-color: white;
+    position: absolute;
+    left: 400px;
+    top: 200px;
+    box-shadow: var(--dt-shadow-elevation-3, 0 1px 3px 0 rgba(60, 64, 67, .3), 0 4px 8px 3px rgba(60, 64, 67, .15));
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+
+#newFolder {
+    height: 80px;
+    width: 100%;
+    display: flex;
+    padding-left: 20px;
+    align-items: center;
+    font-size: 25px;
+    font-weight: 500;
+}
+
+#folder_input {
+    height: 100%;
+    width: 88%;
+    margin-left: 15px;
+    padding-left: 10px;
+    font-size: 15px;
+}
+
+#button_area {
+    height: calc(200px - 120px);
+    width: 100%;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+#cancel_button {
+    position: absolute;
+    right: 100px;
+    color: blue;
+    cursor: pointer;
+}
+
+#create_button {
+    position: absolute;
+    right: 30px;
+    color: blue;
+    cursor: pointer;
+}

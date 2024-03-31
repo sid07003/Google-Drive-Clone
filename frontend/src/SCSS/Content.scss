@@ -1,7 +1,7 @@
 #Content {
     background-color: white;
     height: calc(100% - 70px);
-    width: calc(100vw - 260px);
+    width: calc(100vw - 250px);
     position: absolute;
     bottom: 0;
     right: 0;
@@ -145,4 +145,59 @@
     right: 30px;
     color: blue;
     cursor: pointer;
+}
+
+#files {
+    height: 60px;
+    width: 95%;
+    display: flex;
+    border-bottom: 1px solid gray;
+    margin-left: 15px;
+}
+
+#file_name {
+    height: 100%;
+    width: 40%;
+    display: flex;
+    align-items: center;
+    padding-left: 15px;
+    font-weight: 400;
+    cursor: default;
+}
+
+.file_owner {
+    height: 100%;
+    width: 20%;
+    display: flex;
+    align-items: center;
+    font-weight: 400;
+    cursor: default;
+}
+
+#action {
+    height: 30px;
+    width: 30px;
+    border-radius: 100%;
+    margin-left: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#action:hover {
+    background-color: rgb(171, 169, 169);
+}
+
+#home_page_notifications{
+    height: 50px;
+    width: 300px;
+    border-radius: 5px;
+    background-color: rgba(0, 0, 0, 0.7);
+    position: absolute;
+    top: 20px;
+    left: 400px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 20px;
 }

@@ -46,7 +46,7 @@ export default function Login() {
             })
             .then(result => {
                 setIsError(false);
-                navigate("/home");
+                navigate("/mydrive");
             })
             .catch(error => {
                 console.error('There was a problem with the fetch operation:', error);

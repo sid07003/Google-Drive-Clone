@@ -1,5 +1,6 @@
 require('dotenv').config({ path: './.env' });
 const express = require("express");
+const multer = require("multer");
 const path = require("path");
 const bodyParser = require('body-parser');
 const app = express();
@@ -20,6 +21,7 @@ app.use(cors({
 app.use(cookieParser());
 
 const { MongoClient, ObjectId } = require('mongodb');
+const { userInfo } = require('os');
 MongoClient.connect("mongodb+srv://SiddharthSharma:siddharth@cluster0.gacgrpw.mongodb.net/")
     .then((client) => {
         dbinstance = client.db("google-drive-clone");
@@ -131,7 +133,96 @@ app.post("/signup", (req, res) => {
 })
 
 
-// --------------------------------------------------------------------------------------------------
+// -------------------------------------------- creating folder ------------------------------------------------------
+
+app.post("/createFolder", verifyToken, (req, res) => {
+    const userId = req.userId;
+    const folderName = req.body.folderName;
+    const parent = req.body.parent;
+
+    const currentDate = new Date();
+    const formattedDate = currentDate.toISOString();
+
+    const obj = {
+        "name": folderName,
+        "parent": parent,
+        "owner": userId,
+        "sharedWith": [],
+        "created_at": formattedDate
+    };
+
+    dbinstance.collection("folders_data").findOne({ name: folderName, owner: userId })
+        .then((data) => {
+            console.log(data);
+            if (data) {
+                res.status(400).json({ error: "Folder already exist" });
+            }
+            else {
+                dbinstance.collection("folders_data").insertOne(obj)
+                    .then(() => {
+                        res.status(200).json({ message: "Folder created successfully" });
+                    })
+                    .catch((err) => {
+                        res.status(500).json({ error: "Internal server error" });
+                    });
+            }
+        })
+});
+
+// ------------------------------------------------ data fetching endpoints ----------------------------------------
+
+app.get("/fetchAllData", verifyToken, (req, res) => {
+    const userId = req.userId;
+
+    dbinstance.collection("folders_data").find({ owner: userId, parent: null }).toArray()
+        .then((data) => {
+            res.status(200).json({ foldersData: data });
+        })
+        .catch((err) => {
+            res.status(500).json({ error: "Internal server error" });
+        })
+})
+
+// -------------------------------------------- upload files -------------------------------------------
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, "f:\\My Projects\\Google-Drive-Clone\\frontend\\public\\uploads");
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + '-' + file.originalname);
+    }
+});
+
+const upload = multer({ storage: storage });
+
+app.post('/uploadFile', verifyToken, upload.single('file'), (req, res) => {
+    const userId = req.userId;
+    const file = req.file;
+    const parent = req.body.parent;
+
+    const currentDate = new Date();
+    const formattedDate = currentDate.toISOString();
+    let obj;
+
+    if (!parent) {
+        obj = {
+            name: file.filename,
+            path: file.path,
+            parent: null,
+            owner: userId,
+            sharedWith: [],
+            uploaded_at: formattedDate
+        }
+    }
+
+    dbinstance.collection("files_data").insertOne(obj)
+    .then(()=>{
+        res.status(200).json({message:"File uploaded successfully"});
+    })
+    .catch((err)=>{
+        res.status(500).json({error:"Internal server error"});
+    })
+});
 
 app.listen(3001, (err) => {
     if (err) {

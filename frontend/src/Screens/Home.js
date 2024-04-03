@@ -1,8 +1,11 @@
-import React, { useEffect } from 'react'
+import React, { useEffect,useContext } from 'react'
 import { useNavigate } from 'react-router-dom';
+
+import { context_data } from '../App';
 
 export default function Home() {
     const navigate=useNavigate();
+    const { setIsAuthenticated } = useContext(context_data);
 
     useEffect(() => {
         fetch("http://localhost:3001/checkAuth", {
@@ -14,10 +17,12 @@ export default function Home() {
         })
           .then((res) => {
             if (res.status === 401) {
+              setIsAuthenticated(false);
               navigate("/login");
             }
             else{
-              navigate("/home")
+              setIsAuthenticated(true);
+              navigate("/mydrive")
             }
           })
           .catch((err) => {

@@ -143,17 +143,19 @@ app.post("/createFolder", verifyToken, (req, res) => {
     const currentDate = new Date();
     const formattedDate = currentDate.toISOString();
 
+    const isStarred=false;
+
     const obj = {
         "name": folderName,
         "parent": parent,
         "owner": userId,
         "sharedWith": [],
-        "created_at": formattedDate
+        "created_at": formattedDate,
+        "isStarred": isStarred
     };
 
     dbinstance.collection("folders_data").findOne({ name: folderName, owner: userId })
         .then((data) => {
-            console.log(data);
             if (data) {
                 res.status(400).json({ error: "Folder already exist" });
             }
@@ -174,55 +176,208 @@ app.post("/createFolder", verifyToken, (req, res) => {
 app.get("/fetchAllData", verifyToken, (req, res) => {
     const userId = req.userId;
 
-    dbinstance.collection("folders_data").find({ owner: userId, parent: null }).toArray()
+    dbinstance.collection("folders_data").find({ owner: userId, parent: null }).sort({ name: 1 }).toArray()
         .then((data) => {
-            res.status(200).json({ foldersData: data });
+            dbinstance.collection("files_data").find({ owner: userId, parent: null }).sort({ name: 1 }).toArray()
+                .then((result) => {
+                    res.status(200).json({ foldersData: data, filesData: result });
+                })
+                .catch(() => {
+                    res.status(500).json({ error: "Internal server error" });
+                })
         })
-        .catch((err) => {
+        .catch(() => {
             res.status(500).json({ error: "Internal server error" });
         })
 })
 
+
+app.post("/fetchSpecificData", verifyToken, (req, res) => {
+    const userId = req.userId;
+    const folderId=req.body.folderId;
+
+    dbinstance.collection("folders_data").find({ owner: userId, parent: folderId }).sort({ name: 1 }).toArray()
+        .then((data) => {
+            dbinstance.collection("files_data").find({ owner: userId, parent: folderId }).sort({ name: 1 }).toArray()
+                .then((result) => {
+                    res.status(200).json({ foldersData: data, filesData: result });
+                })
+                .catch(() => {
+                    res.status(500).json({ error: "Internal server error" });
+                })
+        })
+        .catch(() => {
+            res.status(500).json({ error: "Internal server error" });
+        })
+})
 // -------------------------------------------- upload files -------------------------------------------
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, "f:\\My Projects\\Google-Drive-Clone\\frontend\\public\\uploads");
     },
     filename: function (req, file, cb) {
-        cb(null, Date.now() + '-' + file.originalname);
+        cb(null, file.originalname);
     }
 });
 
-const upload = multer({ storage: storage });
+const upload = multer({ storage: storage }).array('files', 5);
 
-app.post('/uploadFile', verifyToken, upload.single('file'), (req, res) => {
-    const userId = req.userId;
-    const file = req.file;
-    const parent = req.body.parent;
-
-    const currentDate = new Date();
-    const formattedDate = currentDate.toISOString();
-    let obj;
-
-    if (!parent) {
-        obj = {
-            name: file.filename,
-            path: file.path,
-            parent: null,
-            owner: userId,
-            sharedWith: [],
-            uploaded_at: formattedDate
+app.post('/uploadFile', verifyToken, (req, res) => {
+    upload(req, res, async (err) => {
+        if (err instanceof multer.MulterError) {
+            return res.status(400).json({ error: "Upload error" });
+        } else if (err) {
+            return res.status(500).json({ error: "Internal server error" });
         }
-    }
 
-    dbinstance.collection("files_data").insertOne(obj)
-    .then(()=>{
-        res.status(200).json({message:"File uploaded successfully"});
-    })
-    .catch((err)=>{
-        res.status(500).json({error:"Internal server error"});
-    })
+        const userId = req.userId;
+        const files = req.files;
+        const parent = req.body.parent;
+
+        const currentDate = new Date();
+        const formattedDate = currentDate.toISOString();
+
+        try {
+            for (const file of files) {
+                const fileExtension = path.extname(file.originalname).toLowerCase();
+                let fileTypeString;
+
+                switch (fileExtension) {
+                    case '.jpg':
+                    case '.jpeg':
+                    case '.png':
+                    case '.gif':
+                    case '.bmp':
+                    case '.tiff':
+                    case '.svg':
+                        fileTypeString = 'image';
+                        break;
+                    case '.mp3':
+                    case '.wav':
+                    case '.ogg':
+                    case '.aac':
+                    case '.flac':
+                    case '.wma':
+                        fileTypeString = 'audio';
+                        break;
+                    case '.pdf':
+                        fileTypeString = 'pdf';
+                        break;
+                    case '.ppt':
+                    case '.pptx':
+                    case '.key':
+                        fileTypeString = 'presentation';
+                        break;
+                    case '.txt':
+                    case '.doc':
+                    case '.docx':
+                    case '.rtf':
+                        fileTypeString = 'documents';
+                        break;
+                    default:
+                        return res.status(400).json({ error: `File type not supported for file ${file.originalname}` });
+                }
+
+                const obj = {
+                    name: file.filename,
+                    path: "../uploads/"+file.filename,
+                    type: fileTypeString,
+                    parent: parent || null,
+                    owner: userId,
+                    sharedWith: [],
+                    uploaded_at: formattedDate,
+                    isStarred: false
+                };
+
+                await dbinstance.collection("files_data").insertOne(obj);
+            }
+
+            res.status(200).json({ message: "Files uploaded successfully" });
+        } catch (error) {
+            res.status(500).json({ error: "Internal server error" });
+        }
+    });
 });
+
+app.post('/uploadFileInFolder', verifyToken, (req, res) => {
+    upload(req, res, async (err) => {
+        const { currentFolder } = req.body;
+
+        if (err instanceof multer.MulterError) {
+            return res.status(400).json({ error: "Upload error" });
+        } else if (err) {
+            return res.status(500).json({ error: "Internal server error" });
+        }
+
+        const userId = req.userId;
+        const files = req.files;
+        const parent = req.body.parent;
+
+        const currentDate = new Date();
+        const formattedDate = currentDate.toISOString();
+
+        try {
+            for (const file of files) {
+                const fileExtension = path.extname(file.originalname).toLowerCase();
+                let fileTypeString;
+
+                switch (fileExtension) {
+                    case '.jpg':
+                    case '.jpeg':
+                    case '.png':
+                    case '.gif':
+                    case '.bmp':
+                    case '.tiff':
+                    case '.svg':
+                        fileTypeString = 'image';
+                        break;
+                    case '.mp3':
+                    case '.wav':
+                    case '.ogg':
+                    case '.aac':
+                    case '.flac':
+                    case '.wma':
+                        fileTypeString = 'audio';
+                        break;
+                    case '.pdf':
+                        fileTypeString = 'pdf';
+                        break;
+                    case '.ppt':
+                    case '.pptx':
+                    case '.key':
+                        fileTypeString = 'presentation';
+                        break;
+                    case '.txt':
+                    case '.doc':
+                    case '.docx':
+                    case '.rtf':
+                        fileTypeString = 'documents';
+                        break;
+                    default:
+                        return res.status(400).json({ error: `File type not supported for file ${file.originalname}` });
+                }
+
+                const obj = {
+                    name: file.filename,
+                    path: "../uploads/"+file.filename,
+                    type: fileTypeString,
+                    parent:  currentFolder,
+                    owner: userId,
+                    sharedWith: [],
+                    uploaded_at: formattedDate,
+                    isStarred: false
+                };
+
+                await dbinstance.collection("files_data").insertOne(obj);
+            }
+
+            res.status(200).json({ message: "Files uploaded successfully" });
+        } catch (error) {
+            res.status(500).json({ error: "Internal server error" });
+        }
+    });
+});
+
 
 app.listen(3001, (err) => {
     if (err) {

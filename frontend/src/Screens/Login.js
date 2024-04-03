@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import '../SCSS/Login.scss';
+
+import { context_data } from '../App';
 
 export default function Login() {
     const navigate = useNavigate();
@@ -10,6 +12,8 @@ export default function Login() {
     const [notification, setNotification] = useState('');
     const [isError, setIsError] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+
+    const { setIsAuthenticated } = useContext(context_data);
 
     const handleLogin = (e) => {
         e.preventDefault();
@@ -32,6 +36,7 @@ export default function Login() {
         })
             .then(response => {
                 if (response.status === 400) {
+                    setIsAuthenticated(false);
                     setNotification("Invalid Credentials");
                     setIsError(true);
                     setIsNotification(true);
@@ -46,7 +51,8 @@ export default function Login() {
             })
             .then(result => {
                 setIsError(false);
-                navigate("/mydrive");
+                setIsAuthenticated(true);
+                navigate("/myDrive");
             })
             .catch(error => {
                 console.error('There was a problem with the fetch operation:', error);

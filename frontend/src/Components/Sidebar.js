@@ -7,38 +7,92 @@ export default function Sidebar() {
     const [isSelected, setIsSelected] = useState(0);
     const [showOptions, setShowOption] = useState(false);
 
-    const { creatingFolder, setCreatingFolder, currentFolder } = useContext(context_data);
+    const { creatingFolder, setCreatingFolder, currentFolder, setShowNotification,
+        setNotification, setNotificationColor } = useContext(context_data);
 
     const handleFileChange = (e) => {
-        const file = e.target.files[0];
+        e.preventDefault();
+        setShowOption(false);
+
+        const files = e.target.files;
 
         const formData = new FormData();
-        formData.append('file', file);
+        for (let i = 0; i < files.length; i++) {
+            formData.append('files', files[i]);
+        }
 
-        fetch("http://localhost:3001/uploadFile", {
-            method: "POST",
-            headers: {
-                // "content-type": "multipart/form-data",
-            },
-            body: formData,
-            credentials: "include"
-        })
-            .then(() => {
-                console.log("file uploaded successfully");
+        if (currentFolder === 'myDrive' || currentFolder === 'home' || currentFolder === 'shared-with-me' || currentFolder === 'recent' || currentFolder === 'starred') {
+            fetch("http://localhost:3001/uploadFile", {
+                method: "POST",
+                headers: {
+                },
+                body: formData,
+                credentials: "include"
             })
-            .catch((err) => {
-                console.log(err);
+                .then((res) => {
+                    if (res.status === 400) {
+                        setNotification("File not supported");
+                        setNotificationColor("red");
+                        setShowNotification(true);
+                        setTimeout(() => {
+                            setShowNotification(false);
+                        }, 2000);
+                    }
+                    else {
+                        setNotification("File uploaded successully");
+                        setNotificationColor("rgb(21, 255, 0)");
+                        setShowNotification(true);
+                        setTimeout(() => {
+                            setShowNotification(false);
+                        }, 2000);
+                    }
+                })
+                .catch((err) => {
+                    console.log(err);
+                })
+        }
+        else {
+            formData.append('currentFolder', currentFolder);
+
+            fetch("http://localhost:3001/uploadFileInFolder", {
+                method: "POST",
+                headers: {
+                },
+                body: formData,
+                credentials: "include"
             })
+                .then((res) => {
+                    if (res.status === 400) {
+                        setNotification("File not supported");
+                        setNotificationColor("red");
+                        setShowNotification(true);
+                        setTimeout(() => {
+                            setShowNotification(false);
+                        }, 2000);
+                    }
+                    else {
+                        setNotification("File uploaded successully");
+                        setNotificationColor("rgb(21, 255, 0)");
+                        setShowNotification(true);
+                        setTimeout(() => {
+                            setShowNotification(false);
+                        }, 2000);
+                    }
+                })
+                .catch((err) => {
+                    console.log(err);
+                })
+        }
     }
 
     useEffect(() => {
         if (currentFolder === 'home') {
             setIsSelected(1);
         }
-        else if (currentFolder === 'my drive') {
+        else if (currentFolder === 'myDrive') {
             setIsSelected(2);
         }
-        else if (currentFolder === 'shared with me') {
+        else if (currentFolder === 'shared-with-me') {
             setIsSelected(3);
         }
         else if (currentFolder === 'recent') {
@@ -53,10 +107,10 @@ export default function Sidebar() {
         <div id="Sidebar">
             <input
                 type="file"
-                accept=".pdf,.doc,.docx,.txt,image/*"
                 onChange={handleFileChange}
                 style={{ display: 'none' }}
                 id="fileInput"
+                multiple
             ></input>
             <div id="background-cover" style={creatingFolder ? { visibility: "visible" } : { visibility: "hidden" }}></div>
             <div id="logo_title">
